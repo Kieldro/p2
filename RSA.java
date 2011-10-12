@@ -6,8 +6,8 @@ project 2
 10/21/2011
 
 Pair programming log (> 80% paired)
-9/19 3-4a  Ian, 1 hr
-9/20 10-12p Ian, Mikita, 4 hrs
+10/11 7 - 8p  Ian, 1 hr
+10/12 7p - 10p Ian, Mikita, 6 hrs
 
 Total time 22 hrs, 20 hrs of pair programing
 
