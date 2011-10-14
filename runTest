@@ -1,5 +1,5 @@
 javac *.java
-java -ea RSA key 16777217 26777217
-#java -ea RSA encrypt infile keyfile outfile
+#java -ea RSA key 47 59
+java -ea RSA encrypt in.txt keyfile out.txt
 #java -ea RSA decrypt infile keyfile outfile
 #cmp -l infile outfile
