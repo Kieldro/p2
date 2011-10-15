@@ -35,7 +35,7 @@ public class RSA{
     
   	String arg = args[0];
   	
-  	if (arg.equals("key") ){
+    if (arg.equals("key") ){
   	  int p = Integer.parseInt(args[1]);
   	  int q = Integer.parseInt(args[2]);
   	  // 2^24 < p,q < 2^30
