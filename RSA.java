@@ -132,7 +132,7 @@ public class RSA{
 		return 0;
 	}
 	
-	static void encrypt(String inFile, String key, String outFile) throws Exception
+/*	static void encrypt(String inFile, String key, String outFile) throws Exception
 	{
 		//encrypting input using the key
 		//print it in the output file
@@ -150,10 +150,10 @@ public class RSA{
 		out.writeByte(-129);	//overflow
 		out.writeInt(10);		//4 bytes
 		out.writeLong(20);		//8 bytes
-		/*out.writeInt(17);
-		out.writeInt(255);
-		out.writeInt(256);
-		*/
+		//out.writeInt(17);
+		//out.writeInt(255);
+		//out.writeInt(256);
+		
 		out.close();
 		
 		try{
@@ -168,8 +168,39 @@ public class RSA{
 			in.close();
 		}catch(EOFException e){
 			if(DEBUG) System.out.println("EOF: " + e);
-		}
-		
+		}	
+	}
+*/
+
+	static void encrypt (String inFile, String key, String outFile){
+		try{
+			byte byte_one = 0;
+			byte byte_two = 0;
+			byte byte_three = 0;
+			byte next = 5;
+			long word = 0;
+			DataInputStream in = new DataInputStream( new FileInputStream(inFile));
+			DataOutputStream out = new DataOutputStream (new FileOutputStream(outFile));
+
+			while(in != null){
+				byte_one = in.readByte();
+				byte_two = in.readByte();
+				byte_three = in.readByte();
+				byte_one++;
+				//concatenate all the bytes into the word
+
+				//make changes to the word
+
+				//figure out how to write a long... instead of just a byte. or if not, just write the bytes.
+				System.out.println("word:"+word);
+				
+				out.write(byte_one);
+				out.write(byte_two);
+				out.write(byte_three);
+				out.write(next);
+			}
+			out.close();
+		}catch(Exception e){}
 	}
 	
 	static void decrypt(String inpu2t, String key, String output){
