@@ -8,15 +8,14 @@ project 2
 Pair programming log (> 80% paired)
 10/11 7 - 8p  Ian, 1 hr
 10/14 2:30p - 5:30p Ian, Mikita, 6 hrs
+10/18 11a - 12:30p Ian, Mikita, 3 hrs
+10/18 1p - 3p Ian,  2 hrs
 
 Total time 22 hrs, 20 hrs of pair programing
 
-Challenges: Converting the first argument from string to character
-(Mikita) Creating the trie data structure.
-(Ian) Understanding the LZ algorithm 
+Challenges: checking the encryped output, binary files cannont be viewed
 
-Learned: RSA
-More Java API
+Learned: bit manipulation
 
 Notes:
 Java 6
@@ -54,10 +53,10 @@ public class RSA{
 			 generateKey(p, q);
 		
 		}else if (arg.equals("encrypt") ){
-			String input = args[1];
-			String key = args[2];
-			String output = args[3];
-			encrypt(input,key,output);
+			File inFile = new File(args[1]);
+			File key = new File(args[2]);
+			File outFile = new File(args[3]);
+			encrypt(inFile, key, outFile);
 	
 		}else if (arg.equals("decrypt") ){
 			String input = args[1];
@@ -152,55 +151,62 @@ public class RSA{
 		return t;
 	}
 	
-	static void encrypt(String inFile, String key, String outFile) throws Exception
+	//Encrypts input using the key (n, e, d) and writes it to the output file
+	static void encrypt(File inFile, File key, File outFile) throws Exception
 	{
-		//encrypting input using the key
-		//print it in the output file
+		if(DEBUG) System.out.println("Encrypting...");
 		if(DEBUG) System.out.println("inFile: " + inFile);
-		
+		DataInputStream in = new DataInputStream( new FileInputStream(inFile) );
 		DataOutputStream out = new DataOutputStream( new FileOutputStream(outFile) );
+		long fileSize = inFile.length();
+		long total = 0;		//total number of bytes read
+		int s = 0;		//shift multiplier
 		
-		//out.writeByte(0x24);
-		//out.writeByte(0x9);
-		//out.writeByte(0x27);
-		/*out.writeByte(128); //overflow
-		out.writeByte(129); //overflow
-		out.writeByte(-127);
-		out.writeByte(-128); // in range
-		out.writeByte(-129); //overflow
-		out.writeInt(10); //4 bytes
-		out.writeLong(20); //8 bytes
-		//out.writeInt(17);
-		//out.writeInt(255);
-		//out.writeInt(256);
-		*/
+		Scanner sc = new Scanner(key);
+		long n = sc.nextLong();
+		long e = sc.nextLong();
+		long d = sc.nextLong();
+		sc.close();
 		
 		try{
-		DataInputStream in = new DataInputStream( new FileInputStream(inFile) );
-		Scanner sc = new Scanner(new File(key));
-		long e = sc.nextLong();
-		long n = sc.nextLong();
-		for(int i = 0; true|| i < 2; i++){
-			byte b = 0;
-			long l = 0;
-			for(int s = 2; s >= 0; s--){ //read in 3 bytes
-				long t = 0;
-				b = in.readByte();
-				//if(DEBUG) System.out.println("in.readByte: " + b);
-				t = b;
-				t <<= 8 * s; // same as l * 2^8 or 256*l
-				l |= t;
+			while(true){		//run till end of file
+				byte b = 0;
+				long l = 0;		//8 bytes long
 				
-				//if(DEBUG) System.out.println(String.format("l = 0x%1$X", l) );
+				for(s = 2; s >= 0; s--, total++){		//read in 3 bytes
+					if (total == fileSize)
+						if(DEBUG) System.out.println("last byte read.");
+					long t = 0;
+					b = in.readByte();
+					//if(DEBUG) System.out.println("in.readByte: " + b);
+					t = b;		//implicit cast to long
+					t <<= 8 * s; // same as l * 2^8 or 256*l
+					l |= t;		// or byte into l
+					
+					//if(DEBUG) System.out.println(String.format("l = 0x%1$X", l) );		//outputs the long in hex form
+				}
+				if(DEBUG) System.out.println(String.format("concatenated 3 bytes ZEXT = 0x%1$X", l) );
+				
+				long Mprime = calculations(l, e, n);
+				if(DEBUG) System.out.println(String.format("Mprime      = 0x%1$X", Mprime) );		//outputs the int in hex form
+				
+				//if(DEBUG) System.out.println("test: " + String.format("0x%1$X", (long)(Math.pow(2,32)) ) );
+				assert(Mprime >= 0 && Mprime < Math.pow(2,32) ):
+					"Encrypted number(long Mprime) " + String.format("0x%1$X", Mprime)
+					+ " requires more than 4 bytes";
+				
+				int i = (int)Mprime;		//cast to byte
+				if(DEBUG) System.out.println(String.format("(int)Mprime = 0x%1$X", i) );		//outputs the int in hex form
+				
+				out.writeInt(i);		//writes 4 bytes at a time as int
 			}
-			long Mprime = calculations(l,e,n);
-			out.writeLong(Mprime);
-		}
-		out.close();
+		}catch(EOFException ex){
+			if(DEBUG) System.out.println("EOF: " + ex);}
+		
 		in.close();
-		}catch(EOFException e){
-			//if(DEBUG) System.out.println("EOF: " + e);
-		}
+		out.close();
+		
+		if(DEBUG) System.out.println("outFile: " + outFile);
 	}
 
 	static long calculations(long M,long e,long n) {
@@ -225,51 +231,11 @@ public class RSA{
 	}	
 	
 	static void decrypt(String inFile, String key, String outFile) throws Exception{
+		if(DEBUG) System.out.println("Decrypting...");
 		//decrypting input using the key
 		//print it in the output file
-		DataOutputStream out = new DataOutputStream( new FileOutputStream(outFile) );
 		
-		//out.writeByte(0x24);
-		//out.writeByte(0x9);
-		//out.writeByte(0x27);
-		/*out.writeByte(128); //overflow
-		out.writeByte(129); //overflow
-		out.writeByte(-127);
-		out.writeByte(-128); // in range
-		out.writeByte(-129); //overflow
-		out.writeInt(10); //4 bytes
-		out.writeLong(20); //8 bytes
-		//out.writeInt(17);
-		//out.writeInt(255);
-		//out.writeInt(256);
-		*/
 		
-		try{
-		DataInputStream in = new DataInputStream( new FileInputStream(inFile) );
-		Scanner sc = new Scanner(new File(key));
-		long e = sc.nextLong();
-		long n = sc.nextLong();
-		for(int i = 0; true|| i < 2; i++){
-			byte b = 0;
-			long l = 0;
-			for(int s = 2; s >= 0; s--){ //read in 3 bytes
-				long t = 0;
-				b = in.readByte();
-				//if(DEBUG) System.out.println("in.readByte: " + b);
-				t = b;
-				t <<= 8 * s; // same as l * 2^8 or 256*l
-				l |= t;
-				
-				//if(DEBUG) System.out.println(String.format("l = 0x%1$X", l) );
-			}
-			long Mprime = calculations(l,e,n);
-			out.writeLong(Mprime);
-		}
-		out.close();
-		in.close();
-		}catch(EOFException e){
-			//if(DEBUG) System.out.println("EOF: " + e);
-		}
 		
 	}
 }
