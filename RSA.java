@@ -69,6 +69,8 @@ public class RSA{
 			System.out.println("Invalid argument \"" + arg + '"');
 		}
 		
+		if(DEBUG) System.out.println("hex: "+ String.format("%1$X", 13) );
+		
 		// time of execution
 		long elapsed = System.currentTimeMillis() - start;
 		if(DEBUG) System.out.println("elapsed run time: "+ elapsed +"ms");
@@ -106,6 +108,12 @@ public class RSA{
 		if(DEBUG) System.out.println(2773 + " " + 17  + " " + 157 + " ***SAMPLE OUTPUT***");
 	}
 	
+	static long gcd(long a, long b){
+		
+		
+		return 0;
+	}
+	
 	static Boolean isPrime(long n){
 		if (n == 2) 
 			return true;
@@ -128,11 +136,7 @@ public class RSA{
 			return true;
 	}
 	
-	static long gcd(long a, long b){
-		return 0;
-	}
-	
-/*	static void encrypt(String inFile, String key, String outFile) throws Exception
+	static void encrypt(String inFile, String key, String outFile) throws Exception
 	{
 		//encrypting input using the key
 		//print it in the output file
@@ -140,10 +144,10 @@ public class RSA{
 		
 		DataOutputStream out = new DataOutputStream( new FileOutputStream(outFile) );
 		
-		out.writeByte(4);
-		out.writeByte(9);
-		out.writeByte(127);
-		out.writeByte(128);	//overflow
+		out.writeByte(0x24);
+		out.writeByte(0x9);
+		out.writeByte(0x27);
+		/*out.writeByte(128);	//overflow
 		out.writeByte(129);	//overflow
 		out.writeByte(-127);
 		out.writeByte(-128);	// in range
@@ -153,16 +157,25 @@ public class RSA{
 		//out.writeInt(17);
 		//out.writeInt(255);
 		//out.writeInt(256);
-		
+		*/
 		out.close();
 		
 		try{
 			DataInputStream in = new DataInputStream( new FileInputStream(inFile) );
 			
 			for(int i = 0; true|| i < 2; i++){
-				byte x = 0;
-				x = in.readByte();
-				if(DEBUG) System.out.println("in.readByte: " + x);
+				byte b = 0;
+				long l = 0;
+				for(int s = 2; s >= 0; s--){		//read in 3 bytes
+					long t = 0;
+					b = in.readByte();
+					if(DEBUG) System.out.println("in.readByte: " + b);
+					t = b;
+					t <<= 8 * s;		// same as l * 2^8 or 256*l
+					l |= t;
+					
+					if(DEBUG) System.out.println(String.format("l = 0x%1$X", l) );
+				}
 			}
 				
 			in.close();
@@ -170,8 +183,8 @@ public class RSA{
 			if(DEBUG) System.out.println("EOF: " + e);
 		}	
 	}
-*/
 
+/*
 	static void encrypt (String inFile, String key, String outFile){
 		try{
 			byte byte_one = 0;
@@ -202,7 +215,7 @@ public class RSA{
 			out.close();
 		}catch(Exception e){}
 	}
-	
+	*/
 	static void decrypt(String inpu2t, String key, String output){
 		//decrypting input using the key
 		//print it in the output file
