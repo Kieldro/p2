@@ -74,7 +74,7 @@ public class RSA{
 		// time of execution
 		long elapsed = System.currentTimeMillis() - start;
 		if(DEBUG) System.out.println("elapsed run time: "+ elapsed +"ms");
-  }
+	}
   
 	static void generateKey(long p, long q){
 		long n = 0;
