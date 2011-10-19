@@ -32,6 +32,8 @@ javac *.java
 java -ea RSA key p q
 java -ea RSA encrypt infile keyfile outfile
 java -ea RSA decrypt infile keyfile outfile
+or with 
+./runTest #make sure it's executable
 */
 import java.util.*;
 import java.io.*;
@@ -161,7 +163,7 @@ public class RSA{
 	//Encrypts input using the key (n, e, d) and writes it to the output file
 	static void encrypt(File inFile, File key, File outFile) throws Exception
 	{
-		if(DEBUG) System.out.println("Encrypting...");
+		if(DEBUG) System.out.println("\nEncrypting...");
 		DataInputStream in = new DataInputStream( new FileInputStream(inFile) );
 		DataOutputStream out = new DataOutputStream( new FileOutputStream(outFile) );
 		/*
@@ -270,7 +272,7 @@ public class RSA{
 	}
 	
 	static void decrypt(File inFile, File key, File outFile) throws Exception{
-		if(DEBUG) System.out.println("Decrypting...");
+		if(DEBUG) System.out.println("\nDecrypting...");
 		//decrypting input using the key
 		//print it in the output file
 		DataInputStream in = new DataInputStream( new FileInputStream(inFile) );
@@ -293,7 +295,6 @@ public class RSA{
 		long fileSize = inFile.length();
 		if(DEBUG) System.out.println("fileSize: " + fileSize + " bytes");
 		long total = 0;		//total number of bytes read
-		int s = 0;		//shift multiplier
 		
 		Scanner sc = new Scanner(key);
 		long n = sc.nextLong();
@@ -309,11 +310,11 @@ public class RSA{
 		
 		try{
 			while(true){		//run till end of file
-				byte b = 0;
 				long M = 0;		//8 bytes long
 				long mask = 0x00FF;		//mask out last byte in long 
 				
-				for(s = 3; s >= 0; s--, total++){		//read in 4 bytes for decryption
+				for(int s = 3; s >= 0; s--, total++){		//read in 4 bytes for decryption
+					byte b = 0;
 					if (total == fileSize){
 						if(DEBUG) System.out.println("last byte read.");
 						break;	//break for loop to encrypt M
@@ -342,13 +343,25 @@ public class RSA{
 				//if(DEBUG) System.out.println(String.format("(int)Mprime = 0x%1$X", i) );		//outputs the int in hex form
 				
 				//write 3 lower bytes
-				out.writeByte((byte)(Mprime >> 8*2) );
-				out.writeByte((byte)(Mprime >> 8) );
-				out.writeByte((byte)Mprime );		//write least sig byte
+				byte[] b = new byte[3];
+				b[0] = (byte)(Mprime >> 8*2);
+				b[1] = (byte)(Mprime >> 8);
+				b[2] = (byte)Mprime;
 				
+				out.writeByte(b[0]);	//always write this MSByte
 				
-				if (total == fileSize){
+				//don't write eof zeroes
+				if (total == fileSize){		//last Mprime
+					if(b[2] != 0 || b[1] != 0)
+						out.writeByte(b[1]);
+					
+					if(b[2] != 0)
+						out.writeByte(b[2]);		//write least sig byte
+					
 					throw new EOFException("File read successfully.");
+				}else{		//default
+					out.writeByte(b[1]);
+					out.writeByte(b[2]);		//write least sig byte
 				}
 			}
 		}catch(EOFException ex){
