@@ -10,15 +10,22 @@ Pair programming log (> 80% paired)
 10/14 2:30p - 5:30p Ian, Mikita, 6 hrs
 10/18 11a - 12:30p Ian, Mikita, 3 hrs
 10/18 1p - 3p Ian,  2 hrs
+10/19 5a - 7a Ian,  2 hrs
 
 Total time 22 hrs, 20 hrs of pair programing
 
 Challenges: checking the encryped output, binary files cannont be viewed
 
-Learned: bit manipulation
+Learned:
+-bit manipulation
+-assert statements can make hard to detect logic errors into runtime errors
 
 Notes:
 Java 6
+
+to do:
+-account for number of bytes mod 3 != 0
+-decryption
 
 run with commands:
 javac *.java
@@ -59,10 +66,10 @@ public class RSA{
 			encrypt(inFile, key, outFile);
 	
 		}else if (arg.equals("decrypt") ){
-			String input = args[1];
-			String key = args[2];
-			String output = args[3];
-			decrypt(input,key,output);
+			File inFile = new File(args[1]);
+			File key = new File(args[2]);
+			File outFile = new File(args[3]);
+			decrypt(inFile, key, outFile);
 	
 		}else if(arg.equals("calc")){
 			long answer = calculations(4,7,187);
@@ -166,37 +173,58 @@ public class RSA{
 		long n = sc.nextLong();
 		long e = sc.nextLong();
 		long d = sc.nextLong();
+		if(DEBUG) System.out.println("n: " + n);
+		if(DEBUG) System.out.println("e: " + e);
+		if(DEBUG) System.out.println("d: " + d);
 		sc.close();
+		assert (n > Math.pow(2,24)): "n must be big enough to encrypt 3 bytes";
+		
+		/*//debugging: generates a custom bin file and sets inputstream to new file
+		if(DEBUG){
+		  String file = "custom";
+		  out = new DataOutputStream( new FileOutputStream(file) );
+		  out.writeByte(0x8B);		//msb == 1
+		  out.writeByte(0x7C);		//msb == 0
+		  out.writeByte(0xF0);		//msb == 1
+		  out.writeByte(0xAB);		//msb == 1
+		  out.writeByte(-1);		//negative
+		  in = new DataInputStream( new FileInputStream(file) );
+		  out = new DataOutputStream( new FileOutputStream(outFile) );
+		}
+		*/
 		
 		try{
 			while(true){		//run till end of file
 				byte b = 0;
-				long l = 0;		//8 bytes long
+				long M = 0;		//8 bytes long
+				long mask = 0x00FF;		//mask out last byte in long 
 				
 				for(s = 2; s >= 0; s--, total++){		//read in 3 bytes
 					if (total == fileSize)
 						if(DEBUG) System.out.println("last byte read.");
 					long t = 0;
 					b = in.readByte();
-					//if(DEBUG) System.out.println("in.readByte: " + b);
-					t = b;		//implicit cast to long
-					t <<= 8 * s; // same as l * 2^8 or 256*l
-					l |= t;		// or byte into l
-					
-					//if(DEBUG) System.out.println(String.format("l = 0x%1$X", l) );		//outputs the long in hex form
+					if(DEBUG) System.out.println(String.format(" in.readByte   = 0x%1$X, %1$d", b));
+					t = b;		//implicit cast to long (possible sign extend if MSB is 1)
+					t &= mask;		//eliminates sign extention
+					//if(DEBUG) System.out.println(String.format(" t           = 0x%1$X, %1$d", t) );
+					t <<= 8 * s;
+					M |= t;		// or byte into M
 				}
-				if(DEBUG) System.out.println(String.format("concatenated 3 bytes ZEXT = 0x%1$X", l) );
 				
-				long Mprime = calculations(l, e, n);
-				if(DEBUG) System.out.println(String.format("Mprime      = 0x%1$X", Mprime) );		//outputs the int in hex form
+				if(DEBUG) System.out.println(String.format("M           = 0x%1$X, %1$d", M) );
+				assert(n > M ): "n must be greater than M";
+				
+				long Mprime = calculations(M, e, n);
+				if(DEBUG) System.out.println(String.format("Mprime      = 0x%1$X, %1$d", Mprime) );		//outputs the int in hex form
 				
 				//if(DEBUG) System.out.println("test: " + String.format("0x%1$X", (long)(Math.pow(2,32)) ) );
 				assert(Mprime >= 0 && Mprime < Math.pow(2,32) ):
 					"Encrypted number(long Mprime) " + String.format("0x%1$X", Mprime)
-					+ " requires more than 4 bytes";
+					+ " requires more than 4 bytes(byte concatenation error)";
 				
 				int i = (int)Mprime;		//cast to byte
-				if(DEBUG) System.out.println(String.format("(int)Mprime = 0x%1$X", i) );		//outputs the int in hex form
+				//if(DEBUG) System.out.println(String.format("(int)Mprime = 0x%1$X", i) );		//outputs the int in hex form
 				
 				out.writeInt(i);		//writes 4 bytes at a time as int
 			}
@@ -219,19 +247,20 @@ public class RSA{
 	    long x = 1;
 	    long y = M;	
 	    long Mprime;
+	    
 	    while (e > 0){
-		if (e % 2 == 1){
-		    x= (x*y) % n;
-		}
-		y = (y*y) % n; 
-		e = e / 2;
+		  if (e % 2 == 1){
+			  x= (x*y) % n;
+		  }
+		  y = (y*y) % n; 
+		  e = e / 2;
 	    }
 	    Mprime = x % n;
 	    
 	    return Mprime;
-	}	
+	}
 	
-	static void decrypt(String inFile, String key, String outFile) throws Exception{
+	static void decrypt(File inFile, File key, File outFile) throws Exception{
 		if(DEBUG) System.out.println("Decrypting...");
 		//decrypting input using the key
 		//print it in the output file
