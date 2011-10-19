@@ -12,13 +12,19 @@ Pair programming log (> 80% paired)
 10/18 11a - 12:30p Ian, Mikita, 3 hrs
 10/18 1p - 3p Ian,  2 hrs
 10/19 5a - 8a Ian,  3 hrs
+10/19 2p - 5p Ian, Mikita, 6 hrs
 
-Total time 22 hrs, 20 hrs of pair programing
+Total time 19 hrs, 15 hrs of pair programing
 
-Challenges: checking the encryped output, binary files cannont be viewed
+Challenges: 
+-checking the encryped output, binary files cannont be viewed
+-unwanted SEXT
 
 Learned:
 -bit manipulation
+-gcd
+-modular exponentiation
+-RSA scheme
 -assert statements can make hard to detect logic errors into runtime errors
 
 Notes:
@@ -26,7 +32,6 @@ Java 6
 
 to do:
 -generate list of key test cases
--add UTEID, csusername, and section number to readme and emails.txt
 
 run with commands:
 javac *.java
@@ -38,19 +43,13 @@ or with
 */
 import java.util.*;
 import java.io.*;
-//import java.lang.Math;
-
+//Ian driving now
 public class RSA{
-	static final boolean DEBUG = true;
+	static final boolean DEBUG = false;
 	
 	public static void main(String[] args) throws Exception
 	{
 		String arg = args[0];
-		/* java 7
-		switch('a'){
-		case 'a':
-			System.out.println("BOOYAKASHA");
-		}*/
 		
 		// measure elapsed time
 		long start = System.currentTimeMillis();
@@ -73,9 +72,6 @@ public class RSA{
 			File key = new File(args[2]);
 			File outFile = new File(args[3]);
 			decrypt(inFile, key, outFile);
-	
-		}else if(arg.equals("calc")){
-			long answer = calculations(4,7,187);
 		}else{
 			System.out.println("Invalid argument \"" + arg + '"');
 		}
@@ -84,7 +80,7 @@ public class RSA{
 		long elapsed = System.currentTimeMillis() - start;
 		if(DEBUG) System.out.println("elapsed run time: "+ elapsed +"ms");
 	}
-  
+	//Mikita driving now
 	static void generateKey(long p, long q){
 		long n = 0;
 		long e = 0;
@@ -92,16 +88,10 @@ public class RSA{
 		long phi = (p-1)*(q-1);
 		//calculate n
 		n = p * q;
-		//checking if the higher limit is holding
-		//assert (Math.pow(2,24) < n);
-		//assert (Math.pow(2,30) > n);
 		
 		//choose e st 1<e<n and e and phi are relatively prime.
 		for(long i = 2; i < n; i++){
-			if(DEBUG) System.out.println("i: " + i);
-				Boolean result = isPrime(i);
-				if(DEBUG) System.out.println("isPrime: " + result);
-				if(result == true){
+				if(isPrime(i) ){
 					if((phi % i) != 0){
 						e = i;
 						break;
@@ -114,10 +104,9 @@ public class RSA{
 	
 		//output n, e, and d
 		System.out.println(n + " " + e + " " + d);
-		if(DEBUG) System.out.println(2773 + " " + 17  + " " + 157 + " ***SAMPLE OUTPUT***");
 	}
 	
-	static Boolean isPrime(long n){
+	static boolean isPrime(long n){
 		if (n == 2) 
 			return true;
 		if (n == 3)
@@ -126,7 +115,7 @@ public class RSA{
 			return false;
 		if ((n % 3) == 0)
 			return false;
-		
+		//Ian driving now
 		long i = 5;
 		long w = 2;
 		while (i * i <= n){
@@ -145,7 +134,7 @@ public class RSA{
 		long c = 0;
 		long d = 1;
 		long q;
-		
+		//Mikita driving now
 		while (v != 0){
 			q = (int)u/v;
 			long temp_u = u;
@@ -164,29 +153,15 @@ public class RSA{
 	//Encrypts input using the key (n, e, d) and writes it to the output file
 	static void encrypt(File inFile, File key, File outFile) throws Exception
 	{
-		if(DEBUG) System.out.println("\nEncrypting...");
 		DataInputStream in = new DataInputStream( new FileInputStream(inFile) );
 		DataOutputStream out = new DataOutputStream( new FileOutputStream(outFile) );
-		/*
-		//debugging: generates a custom bin file and sets inputstream to new file
-		if(DEBUG){
-		  inFile = new File("custom");
-		  out = new DataOutputStream( new FileOutputStream(inFile) );
-		  in = new DataInputStream( new FileInputStream(inFile) );
-		  out.writeByte(0x8B);		//msb == 1
-		  out.writeByte(0x7C);		//msb == 0
-		  out.writeByte(0xF0);		//msb == 1
-		  out.writeByte(0xAB);		//msb == 1
-		  out.writeByte(-1);		//negative
-		  out = new DataOutputStream( new FileOutputStream(outFile) );
-		}
-		*/
-		if(DEBUG) System.out.println("inFile: " + inFile);
+		
 		long fileSize = inFile.length();
 		if(DEBUG) System.out.println("fileSize: " + fileSize + " bytes");
 		long total = 0;		//total number of bytes read
 		int s = 0;		//shift multiplier
 		
+		//Ian driving now
 		Scanner sc = new Scanner(key);
 		long n = sc.nextLong();
 		long e = sc.nextLong();
@@ -213,24 +188,16 @@ public class RSA{
 					if(DEBUG) System.out.println(String.format(" in.readByte   = 0x%1$X, %1$d", b));
 					t = b;		//implicit cast to long (possible sign extend if MSB is 1)
 					t &= mask;		//eliminates sign extention
-					//if(DEBUG) System.out.println(String.format(" t           = 0x%1$X, %1$d", t) );
 					t <<= 8 * s;
 					M |= t;		// or byte into M
 				}
 				
-				if(DEBUG) System.out.println(String.format("M           = 0x%1$X, %1$d", M) );
 				assert(n > M ): "n must be greater than M";
 				
 				long Mprime = calculations(M, e, n);
-				if(DEBUG) System.out.println(String.format("Mprime      = 0x%1$X, %1$d", Mprime) );		//outputs the int in hex form
-				
-				//if(DEBUG) System.out.println("test: " + String.format("0x%1$X", (long)(Math.pow(2,32)) ) );
 				assert(Mprime >= 0 && Mprime < Math.pow(2,32) ):
 					"Encrypted number(long Mprime) " + String.format("0x%1$X", Mprime)
 					+ " requires more than 4 bytes(byte concatenation error)";
-				
-				//int i = (int)Mprime;		//cast to int
-				//if(DEBUG) System.out.println(String.format("(int)Mprime = 0x%1$X", i) );		//outputs the int in hex form
 				
 				out.writeInt( (int)Mprime );		//write the 4 lower bytes as int
 				
@@ -238,16 +205,15 @@ public class RSA{
 					throw new EOFException("File read successfully.");
 				}
 			}
+			//Mikita driving now
 		}catch(EOFException ex){
 			if(DEBUG) System.out.println("EOF: " + ex);}
 		
 		in.close();
 		out.close();
-		
-		if(DEBUG) System.out.println("outFile: " + outFile);
 	}
 
-	static long calculations(long M,long e,long n) {
+	static long calculations(long M, long e, long n) {
 	    //ENCRYPTION = M,e,n
 	    //DECRYPTION = Mprime,d,n
 	    //public key = (e,n)
@@ -272,10 +238,9 @@ public class RSA{
 	
 	//Decrypt input using the d and n. Print it in the output file
 	static void decrypt(File inFile, File key, File outFile) throws Exception{
-		if(DEBUG) System.out.println("\nDecrypting...");
+		//Ian driving now
 		DataInputStream in = new DataInputStream( new FileInputStream(inFile) );
 		DataOutputStream out = new DataOutputStream( new FileOutputStream(outFile) );
-		if(DEBUG) System.out.println("inFile: " + inFile);
 		long fileSize = inFile.length();
 		if(DEBUG) System.out.println("fileSize: " + fileSize + " bytes");
 		long total = 0;		//total number of bytes read
@@ -298,7 +263,6 @@ public class RSA{
 				for(int s = 3; s >= 0; s--, total++){		//read in 4 bytes for decryption
 					byte b = 0;
 					if (total == fileSize){
-						if(DEBUG) System.out.println("last byte read.");
 						break;	//break for loop to encrypt M
 					}
 					long t = 0;
@@ -306,24 +270,19 @@ public class RSA{
 					if(DEBUG) System.out.println(String.format(" in.readByte   = 0x%1$X, %1$d", b));
 					t = b;		//implicit cast to long (possible sign extend if MSB is 1)
 					t &= mask;		//eliminates sign extention
-					//if(DEBUG) System.out.println(String.format(" t           = 0x%1$X, %1$d", t) );
 					t <<= 8 * s;
 					M |= t;		// or byte into M
 				}
 				
-				if(DEBUG) System.out.println(String.format("M           = 0x%1$X, %1$d", M) );
 				assert(n > M ): "n must be greater than M";
 				
 				long Mprime = calculations(M, d, n);		// M, d, n for decryption
-				if(DEBUG) System.out.println(String.format("Mprime      = 0x%1$X, %1$d", Mprime) );		//outputs the int in hex form
 				
-				//if(DEBUG) System.out.println("test: " + String.format("0x%1$X", (long)(Math.pow(2,32)) ) );
 				assert(Mprime >= 0 && Mprime < Math.pow(2,32) ):
 					"Encrypted number(long Mprime) " + String.format("0x%1$X", Mprime)
 					+ " requires more than 4 bytes(byte concatenation error)";
 				
-				//if(DEBUG) System.out.println(String.format("(int)Mprime = 0x%1$X", i) );		//outputs the int in hex form
-				
+				//Mikita driving now
 				//write 3 lower bytes
 				byte[] b = new byte[3];
 				b[0] = (byte)(Mprime >> 8*2);

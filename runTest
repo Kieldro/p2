@@ -1,11 +1,11 @@
 javac *.java
-#java -ea RSA key 47 59
+#java -ea RSA key 6619 6637
 
 #file variables
-original="original.txt"
-decrypted="decrypted.txt"
-encrypted="encrypted"
-key="key.txt"
+original="limerick.txt"
+decrypted="decrypted"
+encrypted="test.txt.encrypted"
+key="KeyFile"
 
 java -ea RSA encrypt $original $key $encrypted
 java -ea RSA decrypt $encrypted $key $decrypted
