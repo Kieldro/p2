@@ -9,12 +9,12 @@ Pair programming log (> 80% paired)
 10/11 7 - 8p  Ian, 1 hr
 10/11 7 - 8p  Mikita, 1 hr
 10/14 2:30p - 5:30p Ian, Mikita, 6 hrs
-10/18 11a - 12:30p Ian, Mikita, 3 hrs
-10/18 1p - 3p Ian,  2 hrs
-10/19 5a - 8a Ian,  3 hrs
+10/18 11a - 2:30p Ian, Mikita, 7 hrs
+10/18 1p - 2p Ian,  1 hr
+10/19 7a - 8a Ian,  1 hr
 10/19 2p - 5p Ian, Mikita, 6 hrs
 
-Total time 19 hrs, 15 hrs of pair programing
+Total time 23 hrs, 19 hrs of pair programing
 
 Challenges: 
 -checking the encryped output, binary files cannont be viewed
@@ -75,10 +75,6 @@ public class RSA{
 		}else{
 			System.out.println("Invalid argument \"" + arg + '"');
 		}
-		
-		// time of execution
-		long elapsed = System.currentTimeMillis() - start;
-		if(DEBUG) System.out.println("elapsed run time: "+ elapsed +"ms");
 	}
 	//Mikita driving now
 	static void generateKey(long p, long q){
@@ -86,27 +82,52 @@ public class RSA{
 		long e = 0;
 		long d = 0;
 		long phi = (p-1)*(q-1);
+
 		//calculate n
 		n = p * q;
+		System.out.println("n"+n);
+		System.out.println("phi"+phi);
 		
 		//choose e st 1<e<n and e and phi are relatively prime.
-		for(long i = 2; i < n; i++){
+		if((phi % 17) != 0){
+			e = 17;
+		}else if((phi % 3) != 0){
+			e = 3;
+		}else{	
+			System.out.println("hi");
+			for(long i = 2; i < phi; i++){
+				System.out.print("*"+i);
 				if(isPrime(i) ){
 					if((phi % i) != 0){
 						e = i;
-						break;
+					}
 				}
 			}
 		}
-	
+
 		//calculate d
 		d = gcd(phi,e);
-	
+		
+		//correction if d is negative
+		while(d < 0){			
+			for(long i = (e+2); i < phi; i++){
+				if(isPrime(i)){
+					if((phi % e) != 0){
+						e = i;
+						break;
+					}
+				}
+				i++;
+			}
+			d = gcd(phi,e);
+		}		
+		
 		//output n, e, and d
 		System.out.println(n + " " + e + " " + d);
 	}
 	
 	static boolean isPrime(long n){
+		//base cases / common cases
 		if (n == 2) 
 			return true;
 		if (n == 3)
@@ -115,7 +136,10 @@ public class RSA{
 			return false;
 		if ((n % 3) == 0)
 			return false;
+		
 		//Ian driving now
+		//checks if a number is prime by checking if it has any factors besides
+		//itself and 1.
 		long i = 5;
 		long w = 2;
 		while (i * i <= n){
@@ -134,7 +158,10 @@ public class RSA{
 		long c = 0;
 		long d = 1;
 		long q;
+
 		//Mikita driving now
+		//using the GCD algorithm from the notes.		
+		
 		while (v != 0){
 			q = (int)u/v;
 			long temp_u = u;
@@ -224,6 +251,7 @@ public class RSA{
 	    long y = M;	
 	    long Mprime;
 	    
+	    //uses the Modular Exponentiation algorithm.
 	    while (e > 0){
 		  if (e % 2 == 1){
 			  x= (x*y) % n;
