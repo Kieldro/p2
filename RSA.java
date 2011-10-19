@@ -26,6 +26,7 @@ Java 6
 
 to do:
 -generate list of key test cases
+-add UTEID, csusername, and section number to readme and emails.txt
 
 run with commands:
 javac *.java
@@ -37,7 +38,7 @@ or with
 */
 import java.util.*;
 import java.io.*;
-import java.lang.Math;
+//import java.lang.Math;
 
 public class RSA{
 	static final boolean DEBUG = true;
@@ -196,8 +197,6 @@ public class RSA{
 		sc.close();
 		assert (n > Math.pow(2,24)): "n must be big enough to encrypt 3 bytes";
 		
-		
-		
 		try{
 			while(true){		//run till end of file
 				byte b = 0;
@@ -271,26 +270,11 @@ public class RSA{
 	    return Mprime;
 	}
 	
+	//Decrypt input using the d and n. Print it in the output file
 	static void decrypt(File inFile, File key, File outFile) throws Exception{
 		if(DEBUG) System.out.println("\nDecrypting...");
-		//decrypting input using the key
-		//print it in the output file
 		DataInputStream in = new DataInputStream( new FileInputStream(inFile) );
 		DataOutputStream out = new DataOutputStream( new FileOutputStream(outFile) );
-		/*
-		//debugging: generates a custom bin file and sets inputstream to new file
-		if(DEBUG){
-		  inFile = new File("custom");
-		  out = new DataOutputStream( new FileOutputStream(inFile) );
-		  in = new DataInputStream( new FileInputStream(inFile) );
-		  out.writeByte(0x8B);		//msb == 1
-		  out.writeByte(0x7C);		//msb == 0
-		  out.writeByte(0xF0);		//msb == 1
-		  out.writeByte(0xAB);		//msb == 1
-		  out.writeByte(-1);		//negative
-		  out = new DataOutputStream( new FileOutputStream(outFile) );
-		}
-		*/
 		if(DEBUG) System.out.println("inFile: " + inFile);
 		long fileSize = inFile.length();
 		if(DEBUG) System.out.println("fileSize: " + fileSize + " bytes");
@@ -305,8 +289,6 @@ public class RSA{
 		if(DEBUG) System.out.println("d: " + d);
 		sc.close();
 		assert (n > Math.pow(2,24)): "n must be big enough to encrypt 3 bytes";
-		
-		
 		
 		try{
 			while(true){		//run till end of file
