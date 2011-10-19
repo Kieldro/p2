@@ -7,10 +7,11 @@ project 2
 
 Pair programming log (> 80% paired)
 10/11 7 - 8p  Ian, 1 hr
+10/11 7 - 8p  Mikita, 1 hr
 10/14 2:30p - 5:30p Ian, Mikita, 6 hrs
 10/18 11a - 12:30p Ian, Mikita, 3 hrs
 10/18 1p - 3p Ian,  2 hrs
-10/19 5a - 7a Ian,  2 hrs
+10/19 5a - 8a Ian,  3 hrs
 
 Total time 22 hrs, 20 hrs of pair programing
 
@@ -24,8 +25,7 @@ Notes:
 Java 6
 
 to do:
--account for number of bytes mod 3 != 0
--decryption
+-generate list of key test cases
 
 run with commands:
 javac *.java
@@ -162,10 +162,25 @@ public class RSA{
 	static void encrypt(File inFile, File key, File outFile) throws Exception
 	{
 		if(DEBUG) System.out.println("Encrypting...");
-		if(DEBUG) System.out.println("inFile: " + inFile);
 		DataInputStream in = new DataInputStream( new FileInputStream(inFile) );
 		DataOutputStream out = new DataOutputStream( new FileOutputStream(outFile) );
+		/*
+		//debugging: generates a custom bin file and sets inputstream to new file
+		if(DEBUG){
+		  inFile = new File("custom");
+		  out = new DataOutputStream( new FileOutputStream(inFile) );
+		  in = new DataInputStream( new FileInputStream(inFile) );
+		  out.writeByte(0x8B);		//msb == 1
+		  out.writeByte(0x7C);		//msb == 0
+		  out.writeByte(0xF0);		//msb == 1
+		  out.writeByte(0xAB);		//msb == 1
+		  out.writeByte(-1);		//negative
+		  out = new DataOutputStream( new FileOutputStream(outFile) );
+		}
+		*/
+		if(DEBUG) System.out.println("inFile: " + inFile);
 		long fileSize = inFile.length();
+		if(DEBUG) System.out.println("fileSize: " + fileSize + " bytes");
 		long total = 0;		//total number of bytes read
 		int s = 0;		//shift multiplier
 		
@@ -179,19 +194,7 @@ public class RSA{
 		sc.close();
 		assert (n > Math.pow(2,24)): "n must be big enough to encrypt 3 bytes";
 		
-		/*//debugging: generates a custom bin file and sets inputstream to new file
-		if(DEBUG){
-		  String file = "custom";
-		  out = new DataOutputStream( new FileOutputStream(file) );
-		  out.writeByte(0x8B);		//msb == 1
-		  out.writeByte(0x7C);		//msb == 0
-		  out.writeByte(0xF0);		//msb == 1
-		  out.writeByte(0xAB);		//msb == 1
-		  out.writeByte(-1);		//negative
-		  in = new DataInputStream( new FileInputStream(file) );
-		  out = new DataOutputStream( new FileOutputStream(outFile) );
-		}
-		*/
+		
 		
 		try{
 			while(true){		//run till end of file
@@ -200,8 +203,10 @@ public class RSA{
 				long mask = 0x00FF;		//mask out last byte in long 
 				
 				for(s = 2; s >= 0; s--, total++){		//read in 3 bytes
-					if (total == fileSize)
+					if (total == fileSize){
 						if(DEBUG) System.out.println("last byte read.");
+						break;	//break for loop to encrypt M
+					}
 					long t = 0;
 					b = in.readByte();
 					if(DEBUG) System.out.println(String.format(" in.readByte   = 0x%1$X, %1$d", b));
@@ -223,10 +228,14 @@ public class RSA{
 					"Encrypted number(long Mprime) " + String.format("0x%1$X", Mprime)
 					+ " requires more than 4 bytes(byte concatenation error)";
 				
-				int i = (int)Mprime;		//cast to byte
+				//int i = (int)Mprime;		//cast to int
 				//if(DEBUG) System.out.println(String.format("(int)Mprime = 0x%1$X", i) );		//outputs the int in hex form
 				
-				out.writeInt(i);		//writes 4 bytes at a time as int
+				out.writeInt( (int)Mprime );		//write the 4 lower bytes as int
+				
+				if (total == fileSize){
+					throw new EOFException("File read successfully.");
+				}
 			}
 		}catch(EOFException ex){
 			if(DEBUG) System.out.println("EOF: " + ex);}
@@ -264,8 +273,90 @@ public class RSA{
 		if(DEBUG) System.out.println("Decrypting...");
 		//decrypting input using the key
 		//print it in the output file
+		DataInputStream in = new DataInputStream( new FileInputStream(inFile) );
+		DataOutputStream out = new DataOutputStream( new FileOutputStream(outFile) );
+		/*
+		//debugging: generates a custom bin file and sets inputstream to new file
+		if(DEBUG){
+		  inFile = new File("custom");
+		  out = new DataOutputStream( new FileOutputStream(inFile) );
+		  in = new DataInputStream( new FileInputStream(inFile) );
+		  out.writeByte(0x8B);		//msb == 1
+		  out.writeByte(0x7C);		//msb == 0
+		  out.writeByte(0xF0);		//msb == 1
+		  out.writeByte(0xAB);		//msb == 1
+		  out.writeByte(-1);		//negative
+		  out = new DataOutputStream( new FileOutputStream(outFile) );
+		}
+		*/
+		if(DEBUG) System.out.println("inFile: " + inFile);
+		long fileSize = inFile.length();
+		if(DEBUG) System.out.println("fileSize: " + fileSize + " bytes");
+		long total = 0;		//total number of bytes read
+		int s = 0;		//shift multiplier
+		
+		Scanner sc = new Scanner(key);
+		long n = sc.nextLong();
+		long e = sc.nextLong();
+		long d = sc.nextLong();
+		if(DEBUG) System.out.println("n: " + n);
+		if(DEBUG) System.out.println("e: " + e);
+		if(DEBUG) System.out.println("d: " + d);
+		sc.close();
+		assert (n > Math.pow(2,24)): "n must be big enough to encrypt 3 bytes";
 		
 		
 		
+		try{
+			while(true){		//run till end of file
+				byte b = 0;
+				long M = 0;		//8 bytes long
+				long mask = 0x00FF;		//mask out last byte in long 
+				
+				for(s = 3; s >= 0; s--, total++){		//read in 4 bytes for decryption
+					if (total == fileSize){
+						if(DEBUG) System.out.println("last byte read.");
+						break;	//break for loop to encrypt M
+					}
+					long t = 0;
+					b = in.readByte();
+					if(DEBUG) System.out.println(String.format(" in.readByte   = 0x%1$X, %1$d", b));
+					t = b;		//implicit cast to long (possible sign extend if MSB is 1)
+					t &= mask;		//eliminates sign extention
+					//if(DEBUG) System.out.println(String.format(" t           = 0x%1$X, %1$d", t) );
+					t <<= 8 * s;
+					M |= t;		// or byte into M
+				}
+				
+				if(DEBUG) System.out.println(String.format("M           = 0x%1$X, %1$d", M) );
+				assert(n > M ): "n must be greater than M";
+				
+				long Mprime = calculations(M, d, n);		// M, d, n for decryption
+				if(DEBUG) System.out.println(String.format("Mprime      = 0x%1$X, %1$d", Mprime) );		//outputs the int in hex form
+				
+				//if(DEBUG) System.out.println("test: " + String.format("0x%1$X", (long)(Math.pow(2,32)) ) );
+				assert(Mprime >= 0 && Mprime < Math.pow(2,32) ):
+					"Encrypted number(long Mprime) " + String.format("0x%1$X", Mprime)
+					+ " requires more than 4 bytes(byte concatenation error)";
+				
+				//if(DEBUG) System.out.println(String.format("(int)Mprime = 0x%1$X", i) );		//outputs the int in hex form
+				
+				//write 3 lower bytes
+				out.writeByte((byte)(Mprime >> 8*2) );
+				out.writeByte((byte)(Mprime >> 8) );
+				out.writeByte((byte)Mprime );		//write least sig byte
+				
+				
+				if (total == fileSize){
+					throw new EOFException("File read successfully.");
+				}
+			}
+		}catch(EOFException ex){
+			if(DEBUG) System.out.println("EOF: " + ex);}
+		
+		in.close();
+		out.close();
+		
+		if(DEBUG) System.out.println("outFile: " + outFile);
 	}
 }

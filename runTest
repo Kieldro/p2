@@ -1,6 +1,6 @@
 javac *.java
 #java -ea RSA key 47 59
 java -ea RSA encrypt original.txt key encrypted.txt
-#java -ea RSA decrypt encrypted.txt key decrypted.txt
+java -ea RSA decrypt encrypted.txt key decrypted.txt
 #cmp original.txt decrypted.txt
-#cmp -l original.txt decrypted.txt
+cmp -l original.txt decrypted.txt
